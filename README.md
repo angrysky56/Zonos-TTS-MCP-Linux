@@ -1,2 +1,69 @@
-# Zonos-TTS-MCP
-MCP server that allows Claude to have a voice.
+# Zonos MCP Integration
+
+A Model Context Protocol integration for Zonos TTS, allowing Claude to generate speech directly.
+
+## Setup
+
+1. Make sure you have Zonos running with our API implementation (`PhialsBasement/zonos-api`)
+
+2. Install dependencies:
+```bash
+npm install @modelcontextprotocol/sdk axios
+```
+
+3. Configure PulseAudio access:
+```bash
+# Your pulse audio should be properly configured for audio playback
+# The MCP server will automatically try to connect to your pulse server
+```
+
+4. Build the MCP server:
+```bash
+npm run build
+# This will create the dist folder with the compiled server
+```
+
+5. Add to Claude's config file:
+Edit your Claude config file (usually in `~/.config/claude/config.json`) and add this to the `mcpServers` section:
+
+```json
+"zonos-tts": {
+  "command": "node",
+  "args": [
+    "/path/to/your/zonos-mcp/dist/server.js"
+  ]
+}
+```
+
+Replace `/path/to/your/zonos-mcp` with the actual path where you installed the MCP server.
+
+## Using with Claude
+
+Once configured, Claude automatically knows how to use the `speak_response` tool:
+
+```python
+speak_response(
+    text="Your text here",
+    language="en-us",  # optional, defaults to en-us
+    emotion="happy"    # optional: "neutral", "happy", "sad", "angry"
+)
+```
+
+## Features
+
+- Text-to-speech through Claude
+- Multiple emotions support
+- Multi-language support
+- Proper audio playback through PulseAudio
+
+## Requirements
+
+- Node.js
+- PulseAudio setup
+- Running instance of Zonos API (PhialsBasement/zonos-api)
+- Working audio output device
+
+## Notes
+
+- Make sure both the Zonos API server and this MCP server are running
+- Audio playback requires proper PulseAudio configuration
