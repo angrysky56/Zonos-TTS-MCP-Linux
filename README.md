@@ -4,7 +4,7 @@ A Model Context Protocol integration for Zonos TTS, allowing Claude to generate 
 
 ## Setup
 
-1. Make sure you have Zonos running with our API implementation (`PhialsBasement/zonos-api`)
+1. Make sure you have Zonos running with our API implementation (`[PhialsBasement/zonos-api](https://github.com/PhialsBasement/Zonos-API)`)
 
 2. Install dependencies:
 ```bash
