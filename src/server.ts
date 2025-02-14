@@ -204,12 +204,6 @@ class TTSServer {
     public async start(): Promise<void> {
         const transport = new StdioServerTransport();
         await this.mcp.connect(transport);
-        console.log("TTS MCP Server started successfully!");
-        console.log("\nAvailable tool: speak_response");
-        console.log("Parameters:");
-        console.log("- text: The text to speak");
-        console.log("- language: Language code (default: en-us)");
-        console.log("- emotion: neutral, happy, sad, or angry (default: neutral)");
     }
 }
 
