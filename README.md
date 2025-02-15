@@ -1,8 +1,19 @@
 # Zonos MCP Integration
+[![smithery badge](https://smithery.ai/badge/@PhialsBasement/zonos-tts-mcp)](https://smithery.ai/server/@PhialsBasement/zonos-tts-mcp)
 
 A Model Context Protocol integration for Zonos TTS, allowing Claude to generate speech directly.
 
 ## Setup
+
+### Installing via Smithery
+
+To install Zonos TTS Integration for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@PhialsBasement/zonos-tts-mcp):
+
+```bash
+npx -y @smithery/cli install @PhialsBasement/zonos-tts-mcp --client claude
+```
+
+### Manual installation
 
 1. Make sure you have Zonos running with our API implementation ([PhialsBasement/zonos-api](https://github.com/PhialsBasement/Zonos-API))
 
