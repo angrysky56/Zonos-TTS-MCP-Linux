@@ -4,7 +4,7 @@ if (typeof global.window === "undefined") {
         location: {
             protocol: "http:",
             hostname: "localhost",
-            port: "8000", // Updated to use our FastAPI port
+            port: "8000",
             href: "http://localhost:8000/"
         }
     };
@@ -15,7 +15,7 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
-import axios from 'axios'; // Using axios instead of gradio client
+import axios from 'axios';
 
 const execAsync = promisify(exec);
 const API_BASE_URL = 'http://localhost:8000';
@@ -25,10 +25,10 @@ type Emotion = "neutral" | "happy" | "sad" | "angry";
 interface EmotionParameters {
     happiness: number;
     sadness: number;
-    anger: number;
     disgust: number;
     fear: number;
     surprise: number;
+    anger: number;
     other: number;
     neutral: number;
 }
@@ -112,32 +112,16 @@ class TTSServer {
                     const emotionParams = this.emotionMap[emotion];
                     console.log(`Converting to speech: "${text}" with ${emotion} emotion`);
 
-                    // Use our new API endpoint
-                    const response = await axios.post(`${API_BASE_URL}/generate`, {
-                        model_choice: "Zyphra/Zonos-v0.1-transformer",
-                        text,
-                        language,
-                        emotion: {
-                            happiness: emotionParams.happiness,
-                            sadness: emotionParams.sadness,
-                            disgust: emotionParams.disgust,
-                            fear: emotionParams.fear,
-                            surprise: emotionParams.surprise,
-                            anger: emotionParams.anger,
-                            other: emotionParams.other,
-                            neutral: emotionParams.neutral
-                        },
-                        vq_score: 0.78,
-                        fmax: 24000,
-                        pitch_std: 45,
-                        speaking_rate: 15,
-                        dnsmos_ovrl: 4,
-                        cfg_scale: 2,
-                        min_p: 0.15,
-                        seed: 420,
-                        unconditional_keys: ["emotion"]
+                    // Use new OpenAI-style endpoint
+                    const response = await axios.post(`${API_BASE_URL}/v1/audio/speech`, {
+                        model: "Zyphra/Zonos-v0.1-transformer",
+                        input: text,
+                        language: language,
+                        emotion: emotionParams,
+                        speed: 1.0,
+                        response_format: "wav"  // Using WAV for better compatibility
                     }, {
-                        responseType: 'arraybuffer' // Important for handling audio response
+                        responseType: 'arraybuffer'
                     });
 
                     // Save the audio response to a temporary file
@@ -162,6 +146,9 @@ class TTSServer {
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : "Unknown error";
                     console.error("TTS Error:", errorMessage);
+                    if (axios.isAxiosError(error) && error.response) {
+                        console.error("API Response:", error.response.data);
+                    }
                     throw new Error(`TTS failed: ${errorMessage}`);
                 }
             }
