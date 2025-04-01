@@ -1,0 +1,51 @@
+# Optimized Docker Compose for Zonos API and TTS MCP
+version: '3.8'
+
+services:
+  zonos-api:
+    build:
+      context: ../Zonos-API
+      dockerfile: Dockerfile
+    container_name: zonos_api
+    runtime: nvidia
+    ports:
+      - "8000:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=0
+      - MODEL_CACHE_DIR=/app/models
+      # Memory optimization options
+      - PYTORCH_CUDA_ALLOC_CONF=max_split_size_mb:128
+    volumes:
+      - ../Zonos-API/models:/app/models
+    command: ["python3", "api.py"]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              capabilities: [gpu]
+              # Limit GPU memory usage to 75% of available memory
+              # This leaves room for other processes
+              device_ids: ['0']
+              options:
+                memory: 9000MiB
+
+  tts-mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: zonos_tts_mcp
+    depends_on:
+      - zonos-api
+    environment:
+      - API_BASE_URL=http://zonos-api:8000
+      - LOG_TO_FILE=true
+      - LOG_LEVEL=error
+    volumes:
+      - ./logs:/app/logs
+
+# Create a separate network for these services
+networks:
+  default:
+    name: zonos-network
+    driver: bridge

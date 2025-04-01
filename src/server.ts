@@ -1,5 +1,16 @@
+// Ensure we have the necessary Node.js types
+/// <reference types="node" />
+
 // Polyfill a minimal global 'window' for Node.js (do this before any other imports)
-if (typeof global.window === "undefined") {
+declare global {
+    namespace NodeJS {
+        interface Global {
+            window: any;
+        }
+    }
+}
+
+if (typeof (global as any).window === "undefined") {
     (global as any).window = {
         location: {
             protocol: "http:",
@@ -16,6 +27,15 @@ import { z } from "zod";
 import { exec } from "child_process";
 import { promisify } from "util";
 import axios from 'axios';
+import fs from 'fs';
+
+// Create a log file for debug output instead of using console.log
+const logFile = fs.createWriteStream('/tmp/zonos-tts-mcp.log', { flags: 'a' });
+// Custom logger function
+const log = (message: string): void => {
+    const timestamp = new Date().toISOString();
+    logFile.write(`[${timestamp}] ${message}\n`);
+};
 
 const execAsync = promisify(exec);
 const API_BASE_URL = 'http://localhost:8000';
@@ -104,36 +124,39 @@ class TTSServer {
             "speak_response",
             {
                 text: z.string(),
-                      language: z.string().default("en-us"),
-                      emotion: z.enum(["neutral", "happy", "sad", "angry"]).default("neutral"),
+                language: z.string().default("en-us"),
+                emotion: z.enum(["neutral", "happy", "sad", "angry"]).default("neutral"),
             },
             async ({ text, language, emotion }: ZonosRequestParams) => {
                 try {
                     const emotionParams = this.emotionMap[emotion];
-                    console.log(`Converting to speech: "${text}" with ${emotion} emotion`);
+                    // Use file logging instead of console.log
+                    log(`Converting to speech: "${text}" with ${emotion} emotion`);
 
-                    // Use new OpenAI-style endpoint
+                    // Use new OpenAI-style endpoint with optimized parameters
                     const response = await axios.post(`${API_BASE_URL}/v1/audio/speech`, {
                         model: "Zyphra/Zonos-v0.1-transformer",
                         input: text,
                         language: language,
                         emotion: emotionParams,
                         speed: 1.0,
-                        response_format: "wav"  // Using WAV for better compatibility
+                        response_format: "wav",  // Using WAV for better compatibility
+                        top_p: 0.85,             // More efficient sampling
+                        min_p: 0.25              // More efficient but still good quality
                     }, {
                         responseType: 'arraybuffer'
                     });
 
                     // Save the audio response to a temporary file
                     const tempAudioPath = `/tmp/tts_output_${Date.now()}.wav`;
-                    const fs = await import('fs/promises');
-                    await fs.writeFile(tempAudioPath, response.data);
+                    const fsPromises = await import('fs/promises');
+                    await fsPromises.writeFile(tempAudioPath, response.data);
 
                     // Play the audio
                     await this.playAudio(tempAudioPath);
 
                     // Clean up the temporary file
-                    await fs.unlink(tempAudioPath);
+                    await fsPromises.unlink(tempAudioPath);
 
                     return {
                         content: [
@@ -145,9 +168,10 @@ class TTSServer {
                     };
                 } catch (error) {
                     const errorMessage = error instanceof Error ? error.message : "Unknown error";
-                    console.error("TTS Error:", errorMessage);
+                    // Use file logging instead of console.error
+                    log(`TTS Error: ${errorMessage}`);
                     if (axios.isAxiosError(error) && error.response) {
-                        console.error("API Response:", error.response.data);
+                        log(`API Response: ${JSON.stringify(error.response.data)}`);
                     }
                     throw new Error(`TTS failed: ${errorMessage}`);
                 }
@@ -157,7 +181,8 @@ class TTSServer {
 
     private async playAudio(audioPath: string): Promise<void> {
         try {
-            console.log("Playing audio from:", audioPath);
+            // Use file logging instead of console.log
+            log(`Playing audio from: ${audioPath}`);
 
             switch (process.platform) {
                 case "darwin":
@@ -183,7 +208,8 @@ class TTSServer {
             }
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Unknown error";
-            console.error("Audio playback error:", errorMessage);
+            // Use file logging instead of console.error
+            log(`Audio playback error: ${errorMessage}`);
             throw new Error(`Audio playback failed: ${errorMessage}`);
         }
     }
@@ -194,5 +220,6 @@ class TTSServer {
     }
 }
 
+log("Starting Zonos TTS MCP Server");
 const server = new TTSServer();
 await server.start();
