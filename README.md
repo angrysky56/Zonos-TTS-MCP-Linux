@@ -28,20 +28,20 @@ This project enables text-to-speech capabilities for Claude AI using the Zonos T
 
 ### Installing via Smithery
 
-To install the **original version** of Zonos TTS Integration for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@PhialsBasement/zonos-tts-mcp):
+To install the **original UNMODIFIED version** of Zonos TTS Integration for Claude Desktop automatically via [Smithery](https://smithery.ai/server/@PhialsBasement/zonos-tts-mcp):
 
 ```bash
 npx -y @smithery/cli install @PhialsBasement/zonos-tts-mcp --client claude
 ```
 
-### Manual installation
+### Manual installation for **Linux with GPU optimizations**
 
 1. Make sure you have Zonos API running with the API implementation ([PhialsBasement/zonos-api](https://github.com/PhialsBasement/Zonos-API))
 
 2. Clone this repository:
 
 ```bash
-git clone https://github.com/YourUsername/Zonos-TTS-MCP-Linux.git
+git clone https://github.com/angrysky56/Zonos-TTS-MCP-Linux.git
 cd Zonos-TTS-MCP-Linux
 ```
 
